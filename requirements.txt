@@ -1,0 +1,6 @@
+PyQt6>=6.5.0
+hidapi>=0.14.0
+psutil>=5.9.0
+pywin32>=306
+WMI>=1.5.1
+pystray>=0.19.5

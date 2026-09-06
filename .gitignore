@@ -1,0 +1,101 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Loose root DLLs (runtime DLLs reside in bin/)
+/*.dll
+
+# Reverse engineering archives & packages
+LHM_v096/
+*_pkg/
+*.zip
+extracted_installer/
+scratch/
+decompiler_pkg/
+dnlib_pkg/
+license/
+doc/
+
+# Temporary logs & decompilation dumps
+*.log
+*.tmp
+crash.log
+*.txt
+!LICENSE.txt
+!requirements.txt
+innoextract.exe
+*.pdb
+obj/
+bin/Release/
+bin/*.txt
+
+# Bin test executables
+bin/debug_cpu_report.exe
+bin/dump_sensors.exe
+bin/probe_all.exe
+bin/probe_mb.exe
+bin/test_loop.exe
+
+# Root test / exploratory scripts
+test_*.py
+test_*.cs
+test_*.ps1
+probe_*.cs
+diag_*.cs
+dump_*.cs
+dump_*.ps1
+dump_*.py
+disasm_*.py
+check_*.py
+check_*.cs
+search_*.py
+inspect_*.py
+inspect_*.ps1
+reflect.ps1
+find_*.py
+find_*.ps1
+get_*.py
+get_*.ps1
+decompile_*.ps1
+analyze_*.ps1
+setup_*.py
+update_*.py
+copy_*.py
+capture_*.py
+list_*.py
+DecompileApp.cs
+InspectLogic.cs
+ProbeLhmBundled.cs
+TestWitmod.cs
+debug_cpu_report.cs
+download_lhm.py
+parse_method_defs.py
+
+# Binaries from reverse engineering
+check_pawn.exe
+diag_cpu.exe
+diag_cpu_rep.exe
+dump_methods.exe
+test_hidsharp.exe
+test_oem.exe
+test_sensors.exe
+test_wpf.exe
+
+# Screenshots & captures
+*.png
+!assets/*.png
+
+# IDE / Editor
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
