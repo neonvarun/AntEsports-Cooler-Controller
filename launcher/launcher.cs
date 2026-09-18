@@ -29,25 +29,7 @@ namespace AntEsportsLauncher
             }
             catch { }
 
-            // 2. Ensure the Bitdefender-trusted kernel driver service is running
-            try
-            {
-                var scProc = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "sc.exe",
-                        Arguments = "start R0ANTESPORTS",
-                        CreateNoWindow = true,
-                        UseShellExecute = false
-                    }
-                };
-                scProc.Start();
-                scProc.WaitForExit(1000);
-            }
-            catch { }
-
-            // 3. Suppress conflicting legacy scheduled task
+            // 2. Suppress conflicting legacy scheduled task
             try
             {
                 var schProc = new Process
@@ -65,7 +47,7 @@ namespace AntEsportsLauncher
             }
             catch { }
 
-            // 4. Terminate any legacy ANTESPORTS.exe if running so our Control Center gets exclusive USB HID ownership
+            // 3. Terminate any legacy ANTESPORTS.exe if running so our Control Center gets exclusive USB HID ownership
             try
             {
                 foreach (var p in Process.GetProcessesByName("ANTESPORTS"))
@@ -79,7 +61,7 @@ namespace AntEsportsLauncher
             }
             catch { }
 
-            // 5. Locate pythonw.exe
+            // 4. Locate pythonw.exe
             string pythonw = FindPythonw(appDir);
             string mainPy = Path.Combine(appDir, "main.py");
 
@@ -119,6 +101,7 @@ namespace AntEsportsLauncher
                 string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
                 string[] candidates = new string[]
                 {
+                    Path.Combine(appDir, @".venv\Scripts\pythonw.exe"),
                     Path.Combine(userProfile, @"AppData\Local\Python\pythoncore-3.14-64\pythonw.exe"),
                     Path.Combine(userProfile, @"AppData\Local\Programs\Python\Python312\pythonw.exe"),
                     Path.Combine(userProfile, @"AppData\Local\Programs\Python\Python311\pythonw.exe"),

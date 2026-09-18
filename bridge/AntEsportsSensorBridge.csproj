@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <ProjectGuid>{4A4B9B47-0D11-4B18-8D4D-B4A4C1D7A7D0}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>AntEsportsSensorBridge</RootNamespace>
+    <AssemblyName>lhm_bridge</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <OutputPath>..\bin\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <LangVersion>Default</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <LhmAssemblyPath>$(MSBuildThisFileDirectory)..\bin\LibreHardwareMonitorLib.dll</LhmAssemblyPath>
+    <LhmAssemblyPath Condition="Exists('$(MSBuildThisFileDirectory)..\packages\LibreHardwareMonitorLib.0.9.6\runtimes\win-x64\lib\net472\LibreHardwareMonitorLib.dll')">$(MSBuildThisFileDirectory)..\packages\LibreHardwareMonitorLib.0.9.6\runtimes\win-x64\lib\net472\LibreHardwareMonitorLib.dll</LhmAssemblyPath>
+    <Net472ReferencePath>$(MSBuildThisFileDirectory)..\packages\Microsoft.NETFramework.ReferenceAssemblies.net472.1.0.3\build\</Net472ReferencePath>
+    <TargetFrameworkRootPath Condition="Exists('$(Net472ReferencePath).NETFramework\v4.7.2')">$(Net472ReferencePath)</TargetFrameworkRootPath>
+    <EnableFrameworkPathOverride Condition="Exists('$(Net472ReferencePath).NETFramework\v4.7.2')">false</EnableFrameworkPathOverride>
+    <NoStdLib Condition="Exists('$(Net472ReferencePath).NETFramework\v4.7.2')">true</NoStdLib>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <DefineConstants>TRACE</DefineConstants>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" Condition="Exists('$(Net472ReferencePath).NETFramework\v4.7.2\mscorlib.dll')">
+      <HintPath>$(Net472ReferencePath).NETFramework\v4.7.2\mscorlib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="LibreHardwareMonitorLib">
+      <HintPath>$(LhmAssemblyPath)</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\lhm_bridge.cs">
+      <Link>lhm_bridge.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

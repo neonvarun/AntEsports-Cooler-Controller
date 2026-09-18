@@ -1,6 +1,7 @@
 @echo off
 title Ant Esports ICEStorm-240 Controller
 cd /d "%~dp0"
+if exist "%~dp0.venv\Scripts\pythonw.exe" (set "PYTHONW=%~dp0.venv\Scripts\pythonw.exe") else (set "PYTHONW=pythonw.exe")
 
 :: Check for Administrator privileges
 net session >nul 2>&1
@@ -10,9 +11,6 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-:: Ensure the official Bitdefender-trusted R0ANTESPORTS kernel driver is running
-sc start R0ANTESPORTS >nul 2>&1
-
 :: Disable the legacy Ant Esports startup scheduled task so it never conflicts
 schtasks /change /tn "ANTESPORTSStartupTaskOKver---ABCDEF6543A7" /disable >nul 2>&1
 
@@ -20,9 +18,5 @@ schtasks /change /tn "ANTESPORTSStartupTaskOKver---ABCDEF6543A7" /disable >nul 2
 taskkill /f /im ANTESPORTS.exe >nul 2>&1
 taskkill /f /im allComputerInfoGetPro.exe >nul 2>&1
 
-:: Ensure HWiNFO SharedMemorySupport is enabled in registry for hybrid sync
-reg add "HKCU\Software\HWiNFO64" /v SharedMemorySupport /t REG_DWORD /d 1 /f >nul 2>&1
-reg add "HKCU\Software\HWiNFO64\Sensors" /v SharedMemorySupport /t REG_DWORD /d 1 /f >nul 2>&1
-
 :: Start the modern SaaS Control Center in background
-start "" "pythonw.exe" "main.py"
+start "" "%PYTHONW%" "main.py"

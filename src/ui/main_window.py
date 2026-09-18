@@ -521,7 +521,7 @@ class MainWindow(QMainWindow):
         header_layout.addStretch()
 
         # Admin Elevation Pill / Button (Fixed 24px height, vertically centered)
-        self.admin_badge = QLabel("⚡ Ring-0 Active")
+        self.admin_badge = QLabel("⚡ PawnIO Active")
         self.admin_badge.setFixedHeight(24)
         self.admin_badge.setStyleSheet(
             "background-color: #0B192C; border: 1px solid #1D4ED8; color: #60A5FA; "
@@ -535,7 +535,9 @@ class MainWindow(QMainWindow):
             "background-color: #18181B; border: 1px solid #3B82F6; color: #3B82F6; "
             "font-size: 10px; font-weight: 600; padding: 2px 10px; border-radius: 6px;"
         )
-        self.admin_btn.setToolTip("Restart with Administrator privileges to access direct AMD Zen 4 Ring-0 SMN registers.")
+        self.admin_btn.setToolTip(
+            "Restart with Administrator privileges to install or access the signed PawnIO sensor backend."
+        )
         self.admin_btn.clicked.connect(self._on_elevate_clicked)
         header_layout.addWidget(self.admin_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
 

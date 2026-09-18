@@ -33,6 +33,7 @@ crash.log
 innoextract.exe
 *.pdb
 obj/
+packages/
 bin/Release/
 bin/*.txt
 
@@ -99,3 +100,9 @@ test_wpf.exe
 *.user
 *.userosscache
 *.sln.docstates
+
+# Checked-in regression tests and third-party license texts
+!LICENSES/
+!LICENSES/*.txt
+!tests/
+!tests/*.py

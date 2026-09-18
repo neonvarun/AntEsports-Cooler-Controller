@@ -64,13 +64,12 @@ def main():
         except Exception:
             pass
 
-    # 3. Suppress Legacy scheduled task and old binaries if running as admin
+    # 3. Suppress legacy scheduled task and old binaries if running as admin
     if is_admin_user():
         try:
             import subprocess
             CREATE_NO_WINDOW = 0x08000000
             subprocess.run('schtasks /change /tn "ANTESPORTSStartupTaskOKver---ABCDEF6543A7" /disable', shell=True, creationflags=CREATE_NO_WINDOW)
-            subprocess.run('sc start R0ANTESPORTS', shell=True, creationflags=CREATE_NO_WINDOW)
             subprocess.run('taskkill /f /im ANTESPORTS.exe', shell=True, creationflags=CREATE_NO_WINDOW)
             subprocess.run('taskkill /f /im allComputerInfoGetPro.exe', shell=True, creationflags=CREATE_NO_WINDOW)
         except Exception:

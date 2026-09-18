@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Text;
 using System.Threading;
 using LibreHardwareMonitor.Hardware;
@@ -31,34 +30,6 @@ namespace AntEsportsSensorBridge
         {
             Console.OutputEncoding = Encoding.UTF8;
 
-            // Attach to the running R0ANTESPORTS driver to reuse the official signed driver and avoid Bitdefender alerts
-            try
-            {
-                var asm = typeof(Computer).Assembly;
-                Type r0Type = asm.GetType("LibreHardwareMonitor.Hardware.Ring0");
-                Type kdType = asm.GetType("LibreHardwareMonitor.Hardware.KernelDriver");
-                var ctor = kdType.GetConstructor(
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
-                    null,
-                    new Type[] { typeof(string), typeof(string) },
-                    null
-                );
-                if (ctor != null)
-                {
-                    object kdInst = ctor.Invoke(new object[] { "WinRing0_1_2_0", "R0ANTESPORTS" });
-                    var openMethod = kdType.GetMethod("Open", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                    if (openMethod != null && (bool)openMethod.Invoke(kdInst, null))
-                    {
-                        var driverField = r0Type.GetField("_driver", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-                        if (driverField != null)
-                        {
-                            driverField.SetValue(null, kdInst);
-                        }
-                    }
-                }
-            }
-            catch { }
-
             try
             {
                 computer = new Computer
@@ -72,19 +43,9 @@ namespace AntEsportsSensorBridge
                 };
                 computer.Open();
                 computer.Accept(visitor);
-                try
-                {
-                    File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bridge_debug.txt"), computer.GetReport());
-                }
-                catch { }
             }
             catch (Exception ex)
             {
-                try
-                {
-                    File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bridge_debug.txt"), "EXCEPTION:\r\n" + ex.ToString());
-                }
-                catch { }
                 Console.WriteLine("{\"error\": " + EscapeJson(ex.Message) + "}");
                 return;
             }
@@ -133,10 +94,25 @@ namespace AntEsportsSensorBridge
 
         static void ScanHardwareSensors(IHardware hw, ref float cpuTemp, ref int cpuTempPriority,
                                         ref float cpuLoad, ref float cpuClock, ref float cpuFan, ref float cpuPower,
-                                        ref float gpuTemp, ref float gpuLoad, ref float gpuClock, ref float gpuFan, ref float gpuPower,
-                                        ref float ramUsed, ref float ramTotal, ref float ramLoad, ref float mbCpuTemp,
-                                        ref string cpuName, ref string gpuName)
+                                         ref float gpuTemp, ref float gpuLoad, ref float gpuClock, ref float gpuFan, ref float gpuPower,
+                                         ref float ramUsed, ref float ramTotal, ref float ramAvailable, ref float ramLoad, ref float mbCpuTemp,
+                                         ref string cpuName, ref string gpuName)
         {
+            // Board fan sensors are commonly exposed below the motherboard as a SuperIO child.
+            // Inspect them at every level so the existing CPU fan field remains populated.
+            foreach (ISensor sensor in hw.Sensors)
+            {
+                if (sensor.Value.HasValue && sensor.SensorType == SensorType.Fan && cpuFan <= 0)
+                {
+                    string fanName = sensor.Name;
+                    if (fanName.IndexOf("CPU", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        fanName.IndexOf("Fan #1", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        cpuFan = sensor.Value.Value;
+                    }
+                }
+            }
+
             if (hw.HardwareType == HardwareType.Cpu)
             {
                 if (string.IsNullOrEmpty(cpuName)) cpuName = hw.Name;
@@ -230,6 +206,10 @@ namespace AntEsportsSensorBridge
                         ramUsed = val * 1024.0f;
                     else if (sensor.SensorType == SensorType.Data && sensor.Name.IndexOf("Total", StringComparison.OrdinalIgnoreCase) >= 0)
                         ramTotal = val * 1024.0f;
+                    else if (sensor.SensorType == SensorType.Data &&
+                             sensor.Name.IndexOf("Available", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                             hw.Name.IndexOf("Total", StringComparison.OrdinalIgnoreCase) >= 0)
+                        ramAvailable = val * 1024.0f;
                     else if (sensor.SensorType == SensorType.Load && sensor.Name.IndexOf("Memory", StringComparison.OrdinalIgnoreCase) >= 0)
                         ramLoad = val;
                 }
@@ -258,9 +238,9 @@ namespace AntEsportsSensorBridge
             {
                 ScanHardwareSensors(sub, ref cpuTemp, ref cpuTempPriority,
                                     ref cpuLoad, ref cpuClock, ref cpuFan, ref cpuPower,
-                                    ref gpuTemp, ref gpuLoad, ref gpuClock, ref gpuFan, ref gpuPower,
-                                    ref ramUsed, ref ramTotal, ref ramLoad, ref mbCpuTemp,
-                                    ref cpuName, ref gpuName);
+                                     ref gpuTemp, ref gpuLoad, ref gpuClock, ref gpuFan, ref gpuPower,
+                                     ref ramUsed, ref ramTotal, ref ramAvailable, ref ramLoad, ref mbCpuTemp,
+                                     ref cpuName, ref gpuName);
             }
         }
 
@@ -281,6 +261,7 @@ namespace AntEsportsSensorBridge
 
             float ramUsed = 0;
             float ramTotal = 0;
+            float ramAvailable = 0;
             float ramLoad = 0;
             float mbCpuTemp = 0;
             string cpuName = "";
@@ -291,9 +272,13 @@ namespace AntEsportsSensorBridge
                 ScanHardwareSensors(hardware, ref cpuTemp, ref cpuTempPriority,
                                     ref cpuLoad, ref cpuClock, ref cpuFan, ref cpuPower,
                                     ref gpuTemp, ref gpuLoad, ref gpuClock, ref gpuFan, ref gpuPower,
-                                    ref ramUsed, ref ramTotal, ref ramLoad, ref mbCpuTemp,
+                                    ref ramUsed, ref ramTotal, ref ramAvailable, ref ramLoad, ref mbCpuTemp,
                                     ref cpuName, ref gpuName);
             }
+
+            // LHM exposes physical memory as Used + Available on some systems.
+            if (ramTotal <= 0 && ramUsed > 0 && ramAvailable > 0)
+                ramTotal = ramUsed + ramAvailable;
 
             // If CPU temp wasn't found from direct CPU sensors, fallback to motherboard CPU temp sensor
             if (cpuTemp <= 0 && mbCpuTemp > 0)
@@ -324,7 +309,7 @@ namespace AntEsportsSensorBridge
                 "{{\"cpu_temp\":{0:0.0},\"cpu_load\":{1:0.0},\"cpu_clock\":{2:0},\"cpu_fan\":{3:0},\"cpu_power\":{4:0.0}," +
                 "\"gpu_temp\":{5:0.0},\"gpu_load\":{6:0.0},\"gpu_clock\":{7:0},\"gpu_fan\":{8:0},\"gpu_power\":{9:0.0}," +
                 "\"ram_used_mb\":{10:0},\"ram_total_mb\":{11:0},\"ram_load\":{12:0.0}," +
-                "\"cpu_name\":{13},\"gpu_name\":{14}}}",
+                "\"cpu_name\":{13},\"gpu_name\":{14},\"backend\":\"LibreHardwareMonitor/PawnIO\"}}",
                 cpuTemp, cpuLoad, cpuClock, cpuFan, cpuPower,
                 gpuTemp, gpuLoad, gpuClock, gpuFan, gpuPower,
                 ramUsed, ramTotal, ramLoad,

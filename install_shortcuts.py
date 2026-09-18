@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 import win32com.client
 
@@ -9,8 +10,6 @@ def create_shortcuts():
     programs = shell.SpecialFolders("Programs")
     
     proj_dir = os.path.abspath(os.path.dirname(__file__))
-    exe_path = os.path.join(proj_dir, "AntEsports.exe")
-    
     # Clean up any legacy or duplicate shortcuts on Desktop
     old_shortcuts = [
         os.path.join(desktop, "Ant Esports Cooler.lnk"),
@@ -32,9 +31,11 @@ def create_shortcuts():
         os.path.join(programs, "Ant Esports ICEStorm-240.lnk")
     ]
     
-    pythonw_path = r"C:\Users\USER\AppData\Local\Python\pythoncore-3.14-64\pythonw.exe"
+    pythonw_path = os.path.join(proj_dir, ".venv", "Scripts", "pythonw.exe")
     if not os.path.exists(pythonw_path):
         pythonw_path = sys.executable.replace("python.exe", "pythonw.exe")
+    if not os.path.exists(pythonw_path):
+        pythonw_path = shutil.which("pythonw.exe") or "pythonw.exe"
     
     main_py = os.path.join(proj_dir, "main.py")
     icon_path = os.path.join(proj_dir, "assets", "app_icon.ico")

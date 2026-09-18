@@ -1,0 +1,6 @@
+hidapi==0.15.0
+psutil==7.2.2
+PyQt6==6.11.0
+PyQt6-Qt6==6.11.2
+PyQt6_sip==13.12.0
+pywin32==312
