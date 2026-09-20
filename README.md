@@ -63,6 +63,8 @@ Run_As_Admin.bat
 
 The application validates the PawnIO installer hash and Authenticode signature before installing it. It uses the installed PawnIO service through LibreHardwareMonitor and never enables test signing or Defender exclusions.
 
+The native sensor bridge opens LibreHardwareMonitor only for the duration of each sample and closes it before the next interval. This releases the shared PCI and ISA access locks between samples so other hardware tools are not blocked by an idle dashboard.
+
 To rebuild the bridge from source, restore `bridge\packages.config` with NuGet and build the x64 project with the .NET Framework MSBuild tooling. The project pins both the CLR 4-compatible LHM 0.9.6 package and the .NET Framework 4.7.2 reference assemblies. The checked-in `bin` copy is the same LHM runtime assembly used by the application, so running the application does not require NuGet or a network connection.
 
 ---
@@ -73,7 +75,7 @@ To rebuild the bridge from source, restore `bridge\packages.config` with NuGet a
 AntEsports-Cooler-Controller/
 ├── assets/                  # UI icons and graphical assets
 ├── bin/                     # LHM bridge dependencies and signed PawnIO installer
-│   ├── lhm_bridge.exe       # High-performance C# sensor daemon
+│   ├── lhm_bridge_pawnio.exe # High-performance C# sensor daemon
 │   ├── LibreHardwareMonitorLib.dll
 │   └── PawnIO_setup.exe
 ├── src/                     # Core Python application

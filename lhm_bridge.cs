@@ -10,6 +10,58 @@ namespace AntEsportsSensorBridge
         static Computer computer;
         static UpdateVisitor visitor = new UpdateVisitor();
 
+        static Computer CreateComputer()
+        {
+            return new Computer
+            {
+                IsCpuEnabled = true,
+                IsGpuEnabled = true,
+                IsMemoryEnabled = true,
+                IsMotherboardEnabled = true,
+                IsControllerEnabled = false,
+                IsStorageEnabled = false
+            };
+        }
+
+        static bool OpenComputer(out string error)
+        {
+            error = null;
+            try
+            {
+                computer = CreateComputer();
+                computer.Open();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                CloseComputer();
+                return false;
+            }
+        }
+
+        static void CloseComputer()
+        {
+            Computer current = computer;
+            computer = null;
+            if (current == null) return;
+
+            try
+            {
+                current.Close();
+            }
+            catch
+            {
+                // The process is terminating or the next cycle will recreate the context.
+                // Never leave cleanup exceptions on the JSON telemetry channel.
+            }
+        }
+
+        static void WriteError(string message)
+        {
+            Console.WriteLine("{\"error\": " + EscapeJson(message) + "}");
+        }
+
         public class UpdateVisitor : IVisitor
         {
             public void VisitComputer(IComputer computer)
@@ -30,26 +82,6 @@ namespace AntEsportsSensorBridge
         {
             Console.OutputEncoding = Encoding.UTF8;
 
-            try
-            {
-                computer = new Computer
-                {
-                    IsCpuEnabled = true,
-                    IsGpuEnabled = true,
-                    IsMemoryEnabled = true,
-                    IsMotherboardEnabled = true,
-                    IsControllerEnabled = false,
-                    IsStorageEnabled = false
-                };
-                computer.Open();
-                computer.Accept(visitor);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("{\"error\": " + EscapeJson(ex.Message) + "}");
-                return;
-            }
-
             bool loop = args.Length > 0 && args[0] == "--loop";
             bool dump = args.Length > 0 && args[0] == "--dump";
             int interval = 1000;
@@ -61,22 +93,52 @@ namespace AntEsportsSensorBridge
 
             if (dump)
             {
-                computer.Accept(visitor);
-                DumpAllSensors(computer);
+                string openError;
+                if (!OpenComputer(out openError))
+                {
+                    WriteError(openError);
+                    return;
+                }
+
+                try
+                {
+                    computer.Accept(visitor);
+                    DumpAllSensors(computer);
+                }
+                catch (Exception ex)
+                {
+                    WriteError(ex.Message);
+                }
+                finally
+                {
+                    CloseComputer();
+                }
                 return;
             }
 
             do
             {
-                try
+                string openError;
+                if (!OpenComputer(out openError))
                 {
-                    computer.Accept(visitor);
-                    string json = CollectData();
-                    Console.WriteLine(json);
+                    WriteError(openError);
                 }
-                catch (Exception ex)
+                else
                 {
-                    Console.WriteLine("{\"error\": " + EscapeJson(ex.Message) + "}");
+                    try
+                    {
+                        computer.Accept(visitor);
+                        string json = CollectData();
+                        Console.WriteLine(json);
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(ex.Message);
+                    }
+                    finally
+                    {
+                        CloseComputer();
+                    }
                 }
 
                 if (loop)
@@ -84,12 +146,6 @@ namespace AntEsportsSensorBridge
                     Thread.Sleep(interval);
                 }
             } while (loop);
-
-            try
-            {
-                computer.Close();
-            }
-            catch { }
         }
 
         static void ScanHardwareSensors(IHardware hw, ref float cpuTemp, ref int cpuTempPriority,

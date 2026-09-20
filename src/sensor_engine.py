@@ -141,7 +141,7 @@ class SensorEngine:
     def __init__(self, bridge_path=None, pawnio_manager=None):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         if bridge_path is None:
-            bridge_path = os.path.join(base_dir, "bin", "lhm_bridge.exe")
+            bridge_path = os.path.join(base_dir, "bin", "lhm_bridge_pawnio.exe")
         self.bridge_path = bridge_path
 
         self.data = HardwareData()
